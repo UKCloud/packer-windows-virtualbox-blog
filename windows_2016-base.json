@@ -1,0 +1,80 @@
+{
+  "variables": {
+    "name": "windows_2016",
+    "version": "1.0",
+    "iso_url": "<Put your ISO URL here>",
+    "iso_checksum_type": "md5",
+    "iso_checksum": "<put your ISO MD5 checksum here>",
+    "ssh_user": "Administrator",
+    "ssh_pass": "<put your desired password for the Administrator account here>",
+    "disk_size": "81920",
+    "memory": "2048",
+    "cpu": "2",
+    "output_directory": "./output/windows_2016-base"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "skip_export": "false",
+      "format": "ova",
+      "output_directory": "{{user `output_directory`}}",
+      "vm_name": "{{user `name`}}",
+      "headless": true,
+      "boot_wait": "1m",
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "communicator": "winrm",
+      "winrm_username": "{{user `ssh_user`}}",
+      "winrm_password": "{{user `ssh_pass`}}",
+      "winrm_timeout": "12h",
+      "shutdown_command": "C:/Windows/packer/PackerShutdown.bat",
+      "shutdown_timeout": "10m",
+      "guest_os_type": "Windows2016_64",
+      "sound": "none",
+      "guest_additions_mode": "attach",
+      "disk_size": "{{user `disk_size`}}",
+      "cpus": "{{user `cpu`}}",
+      "memory": "{{user `memory`}}",
+      "floppy_files": [
+        "./unattend/windows_2016/autounattend.xml",
+        "./floppy/winrm.ps1"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "script": "scripts/install_oracle_guest_additions.ps1"
+    },
+    {
+      "type": "windows-restart"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/set_wsus_registry.ps1"
+    },
+    {
+      "type": "windows-update"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install_puppet.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/set_firewall_rules.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/cleanup.ps1"
+    },
+    {
+      "type": "windows-restart"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/save_shutdown_command1.ps1"
+    }
+  ]
+}
